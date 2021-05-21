@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<uOFFSettings>
+  <uOFFJobSettings>
+    <uOFFToDo>create</uOFFToDo>
+  </uOFFJobSettings>
+  <uOFFSourceSettings>
+    <uOFFServerName>SP01</uOFFServerName>
+    <uOFFUseLocalProfile>true</uOFFUseLocalProfile>
+  </uOFFSourceSettings>
+  <uOFFTargetSettings>
+	<uOFFUserFilesRemainingInDays>365</uOFFUserFilesRemainingInDays>
+  </uOFFTargetSettings>
+  <uOFFUserSettings>
+    <uOFFPassword>Offline</uOFFPassword>
+	<uOFFUserName>Offline</uOFFUserName>
+	<uOFFUserIsLocalAdmin>false</uOFFUserIsLocalAdmin>
+  </uOFFUserSettings>
+</uOFFSettings>

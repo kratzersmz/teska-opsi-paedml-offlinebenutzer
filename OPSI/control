@@ -1,0 +1,173 @@
+[Package]
+version: 43
+depends: 
+
+[Product]
+type: localboot
+id: paedml-offlinebenutzer
+name: paedML-Offlinebenutzer
+description: Das opsi-Paket legt einen lokalen Benutzer an, der das Arbeiten ohne Netzwerkverbindung außerhalb der Schule ermöglicht.
+advice: Der lokale Benutzer kann auf Wunsch (benutzer_ist_lokaler_admin=ja) administrative Rechte erhalten.
+Der lokale Benutzer darf sein Kennwort auf Wunsch (benutzer_darf_passwort_aendern=ja) jederzeit selbst ändern.
+version: 1.0
+priority: -15
+licenseRequired: False
+productClasses: 
+setupScript: setup32.ins
+uninstallScript: uninstall32.ins
+updateScript: 
+alwaysScript: 
+onceScript: 
+customScript: 
+userLoginScript: 
+
+[ProductDependency]
+action: setup
+requiredProduct: dotnetfx
+requiredStatus: installed
+requirementType: before
+
+[ProductProperty]
+type: unicode
+name: benutzer_offline_name
+multivalue: False
+editable: True
+description: Benutzername des anzulegenden lokalen Benutzers.
+values: ["LuL", "Offline", "SuS"]
+default: ["Offline"]
+
+[ProductProperty]
+type: unicode
+name: benutzer_offline_password
+multivalue: False
+editable: True
+description: Passwort für den anzulegenden lokalen Benutzer.
+values: ["bitteAendern"]
+default: ["bitteAendern"]
+
+[ProductProperty]
+type: unicode
+name: benutzer_ist_lokaler_admin
+multivalue: False
+editable: False
+description: Benutzer hat lokale Adminrechte. Achtung! Nur mit Bedacht auf 'ja' setzen.
+values: ["ja", "nein"]
+default: ["nein"]
+
+[ProductProperty]
+type: unicode
+name: paedml_version
+multivalue: False
+editable: False
+description: Version der zugrundeliegenden paedML-Installation.
+values: ["Linux", "Windows_3.x", "Windows_4.x"]
+default: ["Windows_4.x"]
+
+[ProductProperty]
+type: unicode
+name: benutzer_darf_passwort_aendern
+multivalue: False
+editable: False
+description: Der Benutzer kann sein Kennwort jederzeit selbst aendern.
+ Nur mit Bedacht auf 'ja' setzen. Der Benutzer kann sich und andere damit aussperren.
+values: ["ja", "nein"]
+default: ["nein"]
+
+[ProductProperty]
+type: unicode
+name: benutzer_muss_pw_nach_login_aendern
+multivalue: False
+editable: False
+description: Benutzer muss nach erstem Login sein Passwort aendern
+values: ["ja", "nein"]
+default: ["nein"]
+
+[Changelog]
+paedml-offlinebenutzer (1.0-43) stable; urgency=low
+  - Neues Property benutzer_muss_pw_nach_login_aendern
+ -- AK
+
+paedml-offlinebenutzer (1.0-42) stable; urgency=low
+  - Neues Property benutzer_darf_passwort_aendern.
+    Fuer Schueler empfehle ich 'nein', fuer Lehrer koennte 'ja' sinnvoll sein.
+ -- ZEN Windows <ewest@lmz-bw.de>  04.12.2020
+
+paedml-offlinebenutzer (1.0-41) stable; urgency=low
+  - Linux als einfachste Umsetztung ohne Robocopy.
+  - Windows mit komplexer Umsetzung mit Robocopy und spezieller Freigabe.
+ -- ZEN Windows <ewest@lmz-bw.de>  27.11.2020
+
+paedml-offlinebenutzer (1.0-40) testing; urgency=low
+  - TEST nur in Linux!!!
+ -- ZEN Windows <ewest@lmz-bw.de>  20.11.2020
+
+paedml-offlinebenutzer (1.0-39) stable; urgency=low
+  - Fix fuer Windows 10 Startmenue.
+  - SetLogLevel = 7
+ -- ZEN Windows <ewest@lmz-bw.de>  06.11.2020
+
+paedml-offlinebenutzer (1.0-38) stable; urgency=low
+  - Nix. Versionsgleichheit mit paedml-offlineadmin beibehalten.
+ -- ZEN Windows <ewest@lmz-bw.de>  28.09.2020
+
+paedml-offlinebenutzer (1.0-37) stable; urgency=low
+  - Coderefactoring.
+ -- ZEN Windows <ewest@lmz-bw.de>  26.09.2020
+
+paedml-offlinebenutzer (1.0-36) stable; urgency=low
+  - Neues Property paedML_Version. Leider geht es nicht ohne. Die Benutzer.vbs weicht ab.
+  - Linux/Windows_3.x:
+	  - unveraendert.
+	- Windows_4.x:
+      - Documents umbenannt in Eigene Dateien
+      - Pictures umbenannt in Eigene Bilder
+	Warum?!? Weil wir ggfs. spaeter Dateien zwischen MLDATA und C:\Uoff syncen wollen.
+  - Verbessertes Aufraeumen nachd er Deinstallation
+    - Dateien mit robocopy "leer" syncen
+	- Benutzer ggfs. entfernen
+ -- ZEN Windows <ewest@lmz-bw.de>  25.09.2020
+
+paedml-offlinebenutzer (1.0-35) stable; urgency=low
+  - Property benutzer_offline_passwort umbenannt in benutzer_offline_password.
+    Dadurch wird das Kennwort im configed versteckt.
+ -- ZEN Windows <ewest@lmz-bw.de>  17.09.2020
+
+paedml-offlinebenutzer (1.0-34) stable; urgency=low
+  - Vorgaben fuer Property benutzer_offline_name um LuL ergaenzt
+  - Vorgabe fuer Property benutzer_offline_passwort in bitteAendern geaendert
+  - Wert administrator im Property benutzer_offline_name wird als Fehler abgefangen
+ -- ZEN Windows <ewest@lmz-bw.de>  Wed, 2 Sept 2020
+
+paedml-offlinebenutzer (1.0-33) stable; urgency=low
+  - XML-Attribut uOFFUserSettings,uOFFUserIsLocalAdmin hinzugefuegt
+  - neues Property ISLocalAdmin
+  - EXE ausgetauscht
+ -- ZEN Windows <ewest@lmz-bw.de>  Tue, 1 Sept 2020
+
+paedml-offlinebenutzer (1.0-32) stable; urgency=low
+  - Loeschzeitraum fest auf 3650 Tage gesetzt
+ -- ZEN Windows <ewest@lmz-bw.de>  Mon, 31 Aug 2020
+
+paedml-offlinebenutzer (1.0-31) stable; urgency=low
+  - Kleine Anpassung
+ -- ZEN Windows <ewest@lmz-bw.de>  Wed, 29 Jul 2020
+
+paedml-offlinebenutzer (1.0-30) stable; urgency=low
+  - Loeschzeitraum frei waehlbar
+ -- ZEN Windows <ewest@lmz-bw.de>  Tue, 28 Jul 2020
+
+paedml-offlinebenutzer (1.0-29) stable; urgency=low
+  - Benutzername frei waehlbar
+ -- ZEN Windows <ewest@lmz-bw.de>  Mon, 27 Jul 2020
+
+paedml-offlinebenutzer (1.0-28) stable; urgency=low
+  - Logfile uebertragen
+ -- ZEN Windows <ewest@lmz-bw.de>  Thu, 03 May 2018
+
+paedml-offlinebenutzer (1.0-27) stable; urgency=low
+  - reduziert auf das Noetigste
+ -- ZEN Windows <ewest@lmz-bw.de>  Thu, 03 May 2018
+
+paedml-offlinebenutzer (1.0-1) stable; urgency=low
+  - Project created with opsi Package Builder 8.0.4
+ -- ZEN Windows <ewest@lmz-bw.de>  Tue, 10 May 2016

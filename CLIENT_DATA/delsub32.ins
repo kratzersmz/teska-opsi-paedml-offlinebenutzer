@@ -1,0 +1,101 @@
+; paedML Offline-Benutzer / Offline-Admin
+
+Message "Uninstalling " + $ProductId$ + " ..."
+
+if FileExists($UninstallProgram$)
+  ; Usernamen sichern
+  if FileExists($FULLPATH_Settings_xml$)
+		set $Uninstall_Username$ = getValueFromFileBySeparator("<uOFFUserName", ">", $FULLPATH_Settings_xml$)
+		set $Uninstall_Username$ = takeString(0, splitString ($Uninstall_Username$, "<"))
+	else
+		set $Uninstall_Username$ = "##kein##"
+		LogWarning "Der Datei 'settings.xml' konnte kein Benutzername entnommen werden."
+	endif
+	DosInAnIcon_Analyse_PreUninstall "$Uninstall_Username$"
+	comment "Uninstall program found, starting uninstall"
+	Set $PAR_ToDo$ = "delete"
+	comment "Patching config-File"
+	PatchTextFile_Settingsxml_uninstall $InstallDir$ + "\ProgramFiles\Settings.xml"
+	ChangeDirectory "%SCRIPTPATH%"
+	comment "Starting uninstaller"
+	Winbatch_uninstall
+	comment "Delete files (robocopy)"
+  DosInAnIcon_Wipe_Files
+	comment "Delete files again (winst_files)"
+	Files_uninstall /32Bits
+	comment "Delete Loginscript."
+	Files_uninstall_loginscript
+	comment "Check for local user account and delete if neccessary"
+	if not( $Uninstall_Username$ = "##kein##")
+		comment "Suche nach dem lokalen Benutzerkonto..."
+		DosInAnIcon_Check_User
+		if ("0" = getLastExitcode)
+			comment "Lokaler Benutzer '" + $Uninstall_Username$ + "' wurde gefunden. Es muss geloescht werden..."
+			LogWarning "Die Deinstallation war offensichtlich nicht erfolgreich."
+			; Benutzer loeschen
+			DosInAnIcon_Delete_User
+			if ("0" = getLastExitcode)
+				comment "Lokaler Benutzer '" + $Uninstall_Username$ + "'wurde erfolgreich geloescht."
+			else
+				LogError "Lokaler Benutzer '" + $Uninstall_Username$ + "' konnte nicht geloescht werden."
+			endif
+		else
+			comment "Lokaler Benutzer '" + $Uninstall_Username$ + "' wurde nicht gefunden."
+			comment "Die Deinstallation war erfolgreich."
+		endif
+	else
+		comment "Da der Datei 'settings.xml' kein Benutzername entnommen werden konnte, entfaellt dieser Schritt."
+	endif
+endif
+
+; Startmenu-Fix
+	comment "Geplante Aufgabe - Beenden"
+	DosBatch_StartmenuFix_Task_End "$StartmenuFix_TaskName$"
+	comment "Geplante Aufgabe - Loeschen"
+	DosBatch_StartmenuFix_Task_Delete "$StartmenuFix_TaskName$"
+	comment "Loesche Dateien"
+	Files_StartmenuFix_uninstall /32Bit
+
+[DosBatch_StartmenuFix_Task_End]
+schtasks /End /TN "%1"
+
+[DosBatch_StartmenuFix_Task_Delete]
+schtasks /Delete /TN "%1" /F
+
+[Files_StartmenuFix_uninstall]
+checktargetpath = "$InstallDir_StartmenuFix$"
+Delete -sf "$InstallDir_StartmenuFix$"
+
+[Winbatch_uninstall]
+"$UninstallProgram$"
+
+[Files_uninstall]
+del -sf "$InstallDir$\"
+
+[Files_uninstall_loginscript]
+del -f "$FULLPATH_Benutzer_vbs$"
+
+[DosInAnIcon_Wipe_Files]
+Robocopy.exe "%ScriptPath%\deletefiles" "$InstallDir$" /mir
+
+[DosInAnIcon_Check_User]
+net user "$Uninstall_Username$"
+
+[DosInAnIcon_Delete_User]
+net user "$Uninstall_Username$" /delete
+
+[Files_copySettingsxml_uninstall]
+delete -f "$InstallDir$\ProgramFiles\Settings.xml"
+copy "$InstallDir$\ProgramFiles\Settings.xml.template" "$InstallDir$\ProgramFiles\Settings.xml"
+
+[PatchTextFile_Settingsxml_uninstall]
+GoToTop
+FindLine_Containing '<uOFFToDo>'
+DeleteTheLine
+InsertLine '    <uOFFToDo>$PAR_ToDo$</uOFFToDo>'
+
+[DosInAnIcon_Analyse_PreUninstall]
+@echo off
+echo Benutzereigenschaften vor der Deinstallation
+echo ============================================
+net user "%1"

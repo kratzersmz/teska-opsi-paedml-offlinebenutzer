@@ -1,0 +1,20 @@
+; paedML Offline-Benutzer / Offline-Admin
+
+[Actions]
+requiredWinstVersion >= "4.11.2.6"
+SetLogLevel = 7
+
+include_insert "include-me.opsiinc"
+; Anweisung fuer Installer
+Set $PAR_ToDo$ = "delete"
+
+comment "Show product picture"
+ShowBitmap "%ScriptPath%\" + $ProductId$ + ".png" $ProductId$
+
+Message "Uninstalling " + $ProductId$ + " ..."
+
+if FileExists("%ScriptPath%\delsub32.ins")
+	comment "Start uninstall sub section"
+	Sub "%ScriptPath%\delsub32.ins"
+endif
+

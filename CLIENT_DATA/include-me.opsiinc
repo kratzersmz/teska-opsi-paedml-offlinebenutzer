@@ -1,0 +1,73 @@
+; paedML Offline-Benutzer / Offline-Admin
+; Include-Datei mir Deklarationen etc. 
+; fuer install und uninstall
+
+; install und uninstall
+DefVar $UOFF_or_AOFF$
+DefVar $MsiId$
+DefVar $InstallProgram$
+DefVar $UninstallProgram$
+DefVar $LogDir$
+DefVar $ProductId$  
+DefVar $MinimumSpace$
+DefVar $InstallDir$
+DefVar $ExitCode$
+; Ew
+DefVar $myservice$
+DefVar $PAR_ToDo$
+DefVar $PAR_Server$
+DefVar $PAR_UseDefaultProfile$
+DefVar $PAR_Password$
+DefVar $PAR_Username$
+DefVar $PAR_ProfilUser$
+DefVar $PAR_ProfilUserPW$
+DefVar $PAR_DateiVorhalteZeitraum$
+DefVar $PAR_IsLocalAdmin$
+DefVar $PAR_paedML_Version$
+DefVar $PAR_DebugMode$
+DefVar $PAR_Passwort_aenderbar$
+DefVar $PAR_Passwort_initial_change$
+DefVar $FULLPATH_Settings_xml$
+DefStringList $result$
+DefStringlist $msilist$
+DefVar $FULLPATH_Benutzer_vbs$
+;delsub
+DefVar $Uninstall_Username$
+; Startmenue-Fix
+DefVar $InstallDir_StartmenuFix$
+DefVar $StartmenuFix_XmlFile$
+DefVar $StartmenuFix_TaskName$
+
+; Werte setzen
+; ----------------------------------------------------------------
+Set $UOFF_or_AOFF$          = "UOFF"
+Set $ProductId$             = "paedml-offlinebenutzer"
+Set $MinimumSpace$          = "300 MB"
+; ----------------------------------------------------------------
+Set $LogDir$                = "%SystemDrive%\tmp"
+Set $PAR_ToDo$              = "Create"
+Set $PAR_Server$            = "SP01"
+Set $UninstallProgram$      = "%SystemDrive%\paedML_"+ $UOFF_or_AOFF$ + "\ProgramFiles\UOFF.exe"
+Set $InstallProgram$        = "%SystemDrive%\paedML_"+ $UOFF_or_AOFF$ + "\ProgramFiles\UOFF.exe"
+Set $InstallDir$            = "%SystemDrive%\paedML_" + $UOFF_or_AOFF$
+;
+Set $InstallDir_StartmenuFix$ = "%CommonAppDataDir%\paedml-offlinebenutzer_w10-fix-startmenu"
+Set $StartmenuFix_XmlFile$    = $InstallDir_StartmenuFix$ + "\paedML-Offlinebenutzer_Windows10_ShellExperienceHost_stoppen.xml"
+Set $StartmenuFix_TaskName$   = "paedML-Offlinebenutzer_Windows10_ShellExperienceHost_stoppen"
+; ----------------------------------------------------------------
+
+; Parameter befuellen
+	Set $PAR_ToDo$ = "create"
+	Set $PAR_Password$ = GetProductProperty("benutzer_offline_password", "Offline")
+	Set $PAR_Username$ = GetProductProperty("benutzer_offline_name", "Offline")
+	;Set $PAR_DateiVorhalteZeitraum$ = GetProductProperty("benutzer_offline_dateivorhaltezeitraum", "365")
+	Set $PAR_DateiVorhalteZeitraum$ = "3650"
+	Set $PAR_IsLocalAdmin$ = GetProductProperty("benutzer_ist_lokaler_admin", "nein")
+	set $PAR_paedML_Version$ = GetProductProperty("paedML_Version", "Windows_4.x")
+	set $PAR_DebugMode$ = GetProductProperty("logfile_erstellen", "nein")
+	set $PAR_Passwort_aenderbar$ = GetProductProperty("benutzer_darf_passwort_aendern", "nein")
+        set $PAR_Passwort_inital_change$ = GetProductProperty("benutzer_muss_pw_nach_login_aendern", "nein")
+; Variablen betanken
+  Set $FULLPATH_Settings_xml$ = $InstallDir$ + "\ProgramFiles\Settings.xml"
+  Set $FULLPATH_Benutzer_vbs$ = "%CommonStartmenuDir%\Programs\StartUp\Benutzer_UOFF.vbs"
+

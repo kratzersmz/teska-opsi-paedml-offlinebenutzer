@@ -1,0 +1,187 @@
+; paedML Offline-Benutzer / Offline-Admin
+; Mit Weiche für PaedML Windows / Linux
+
+[Actions]
+requiredWinstVersion >= "4.11.3.6"
+ScriptErrorMessages=off
+SetLogLevel = 7
+
+include_insert "include-me.opsiinc"
+; Anweisung fuer Installer
+Set $PAR_ToDo$ = "create"
+
+if not(HasMinimumSpace ("%SystemDrive%", $MinimumSpace$))
+	LogError "Not enough space on %SystemDrive%, " + $MinimumSpace$ + " on drive %SystemDrive% needed for " + $ProductId$
+	isFatalError "No Space"
+	; Stop process and set installation status to failed
+else
+	comment "Show product picture"
+	ShowBitmap "%ScriptPath%\" + $ProductId$ + ".png" $ProductId$
+	
+	if FileExists("%ScriptPath%\delsub32.ins")
+		comment "Start uninstall sub section"
+		Sub "%ScriptPath%\delsub32.ins"
+	endif
+	
+	Message "Installing " + $ProductId$ + " ..."
+
+; Plausibilität prüfen
+	; Namen testen
+	if (lower($PAR_Username$) = "administrator")
+		isFatalError "Der Benutzername 'administrator' darf nicht verwendet werden. Bitte aendern!"
+	endif	
+
+	comment "Copy files"
+	if ($PAR_paedML_Version$ = "Windows_4.x")
+		Files_install_paedML_Windows_4x /32Bit
+	endif
+	if ($PAR_paedML_Version$ = "Windows_3.x")
+		Files_install_paedML_Windows_3x /32Bit
+	endif
+	if ($PAR_paedML_Version$ = "Linux")
+		Files_install_paedML_Linux /32Bit
+	endif
+
+	comment "Patching config-File"
+	if ($PAR_IsLocalAdmin$ = "ja")
+		Set $PAR_IsLocalAdmin$ = "true"
+	else
+		Set $PAR_IsLocalAdmin$ = "false"
+	endif
+	PatchTextFile_Settingsxml_install $FULLPATH_Settings_xml$
+	
+	comment "Patch Loginscript"
+	if FileExists($FULLPATH_Benutzer_vbs$)
+		PatchTextFile_Benutzer_vbs_Username $FULLPATH_Benutzer_vbs$
+		if ($PAR_DebugMode$ = "ja")
+			PatchTextFile_Benutzer_vbs_Logfile $FULLPATH_Benutzer_vbs$
+		endif
+	else
+		LogWarning "Benutzer.vbs nicht gefunden!"
+	endif
+	
+	comment "Starting installer"	
+	ChangeDirectory "%SCRIPTPATH%"
+	Winbatch_install
+	set $ExitCode$ = getLastExitCode
+	
+	comment "Passwortaenderungen erlauben: ja oder nein..."
+	if ($PAR_Passwort_aenderbar$ = "ja")
+		DosInAnIcon_AllowPasswordChange "$PAR_Username$"
+	endif	
+	
+	comment "Passwort nach erstem Login ändern: nein oder ja..."
+	if ($PAR_Passwort_inital_change$ = "ja")
+		DosInAnIcon_ForcePasswordChange "$PAR_Username$"
+	endif
+
+	DosInAnIcon_Analyse_Postinstall "$PAR_Username$"
+	
+	comment "Logfile untersuchen..."	
+	if FileExists($InstallDir$ + "\LogFiles\Logfile.txt")
+		comment "Appending Logfile..."
+		includelog $InstallDir$ + "\LogFiles\Logfile.txt" "300"
+	endif
+	if ($ExitCode$ = "0")
+		comment "Keine Fehler im Logfile der Offlinbenutzer-Installation."
+	else
+		isFatalError "Bitte Logdatei prüfen."
+	endif
+
+	; Profilvorlage entfernen
+	;if ($PAR_paedML_Version$ = "Linux")
+		comment "Loesche die Profilvorlage, um Problemen mit temporaeren Profilen vorzubeugen."
+		Files_delete_DefaultProfile
+	;endif
+	
+	; Startmenu-Fix
+	comment "Kopiere Dateien"
+	Files_install /32Bit
+	PatchTextFile_Taskxml_install $StartmenuFix_XmlFile$
+	comment "Registriere geplante Aufgabe."
+	DosBatch_Task_Register "$StartmenuFix_XmlFile$" "$StartmenuFix_TaskName$"
+endif
+
+[Files_install]
+copy -s "%ScriptPath%\files_fix_startmenue\*.*" "$InstallDir_StartmenuFix$"
+
+[DosBatch_Task_Register]
+schtasks /Create /XML "%1" /TN "%2"
+
+[PatchTextFile_Taskxml_install]
+GoToTop
+FindLine_Containing '<UserId>'
+DeleteTheLine
+InsertLine '      <UserId>%PCName%\$PAR_Username$</UserId>'
+
+[Files_copySettingsxml_install]
+delete -f "$InstallDir$\ProgramFiles\Settings.xml"
+copy "$InstallDir$\ProgramFiles\Settings.xml.template" "$InstallDir$\ProgramFiles\Settings.xml"
+
+[PatchTextFile_Settingsxml_install]
+GoToTop
+FindLine_Containing '<uOFFPassword>'
+DeleteTheLine
+InsertLine '     <uOFFPassword>$PAR_Password$</uOFFPassword>'
+GoToTop
+FindLine_Containing '<uOFFUserName>'
+DeleteTheLine
+InsertLine '     <uOFFUserName>$PAR_Username$</uOFFUserName>'
+GoToTop
+FindLine_Containing '<uOFFUserFilesRemainingInDays>'
+DeleteTheLine
+InsertLine '     <uOFFUserFilesRemainingInDays>$PAR_DateiVorhalteZeitraum$</uOFFUserFilesRemainingInDays>'
+GoToTop
+FindLine_Containing '<uOFFUserIsLocalAdmin>'
+DeleteTheLine
+InsertLine '     <uOFFUserIsLocalAdmin>$PAR_IsLocalAdmin$</uOFFUserIsLocalAdmin>'
+
+[PatchTextFile_Benutzer_vbs_Username]
+GoToTop
+FindLine_Containing '"##DoOnlyThisUser##"'
+DeleteTheLine
+InsertLine 'Const   DoOnlyThisUser = "$PAR_Username$"'
+
+[PatchTextFile_Benutzer_vbs_Logfile]
+GoToTop
+FindLine_Containing 'Const   debugMode ='
+DeleteTheLine
+InsertLine 'Const   debugMode = True'
+
+[Winbatch_install]
+"$InstallProgram$"
+
+[Files_delete_DefaultProfile]
+del -sf "$InstallDir$\UserProfile\UOFF.v6"
+
+[DosInAnIcon_AllowPasswordChange]
+@echo off
+echo Passwortaenderungen erlauben
+echo ============================
+net user "%1" /PASSWORDCHG:YES
+
+
+[DosInAnIcon_ForcePasswordChange]
+@echo off
+echo Passwortaenderungen nach erstem Login ändern
+echo ============================
+net user "%1" /logonpasswordchg:yes
+
+
+[DosInAnIcon_Analyse_Postinstall]
+@echo off
+echo Benutzereigenschaften nach der Installation
+echo ===========================================
+net user "%1"
+
+[Files_install_paedML_Windows_3x]
+copy -se "%ScriptPath%\files_paedML_Windows_3x\ProgramFiles\*.*" "$InstallDir$\ProgramFiles"
+copy "%ScriptPath%\files_paedML_Windows_3x\Benutzer_UOFF.vbs" "%CommonStartmenuDir%\Programs\StartUp"
+
+[Files_install_paedML_Windows_4x]
+copy -se "%ScriptPath%\files_paedML_Windows_4x\ProgramFiles\*.*" "$InstallDir$\ProgramFiles"
+copy "%ScriptPath%\files_paedML_Windows_4x\Benutzer_UOFF.vbs" "%CommonStartmenuDir%\Programs\StartUp"
+
+[Files_install_paedML_Linux]
+copy -se "%ScriptPath%\files_paedML_Linux\ProgramFiles\*.*" "$InstallDir$\ProgramFiles"
+copy "%ScriptPath%\files_paedML_Linux\Benutzer_UOFF.vbs" "%CommonStartmenuDir%\Programs\StartUp"
