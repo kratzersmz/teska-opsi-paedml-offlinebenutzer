@@ -66,7 +66,7 @@ Set $StartmenuFix_TaskName$   = "paedML-Offlinebenutzer_Windows10_ShellExperienc
 	set $PAR_paedML_Version$ = GetProductProperty("paedML_Version", "Windows_4.x")
 	set $PAR_DebugMode$ = GetProductProperty("logfile_erstellen", "nein")
 	set $PAR_Passwort_aenderbar$ = GetProductProperty("benutzer_darf_passwort_aendern", "nein")
-        set $PAR_Passwort_inital_change$ = GetProductProperty("benutzer_muss_pw_nach_login_aendern", "nein")
+        set $PAR_Passwort_initial_change$ = GetProductProperty("benutzer_muss_pw_nach_login_aendern", "nein")
 ; Variablen betanken
   Set $FULLPATH_Settings_xml$ = $InstallDir$ + "\ProgramFiles\Settings.xml"
   Set $FULLPATH_Benutzer_vbs$ = "%CommonStartmenuDir%\Programs\StartUp\Benutzer_UOFF.vbs"

@@ -71,7 +71,7 @@ else
 	endif	
 	
 	comment "Passwort nach erstem Login ändern: nein oder ja..."
-	if ($PAR_Passwort_inital_change$ = "ja")
+	if ($PAR_Passwort_initial_change$ = "ja")
 		DosInAnIcon_ForcePasswordChange "$PAR_Username$"
 	endif
 
